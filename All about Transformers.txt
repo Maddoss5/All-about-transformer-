@@ -1,0 +1,88 @@
+All about Transformers 
+----------------------------------
+
+
+Self attention ----
+
+So we want how related each token is to the one that comes before it . Attention is just sum of context vectors. So attention for each token (xi) becomes Summation Xj where j < i . But we wouldnt give equal weight to all the previous tokens . So we need it to have a weight.
+Hence this becomes Attention = Summation ( Wj)*(Xj).
+
+How do we get this weight ? and what is a good metric ? 
+-------------------------------------------------------
+
+To find this weight we get the similarity of the current token (xi ) and tokens that comes before it ( xj ). This similarity is t hen passed through softmax to find out which words has higher affininity to current token (xi). 
+
+Hence Attention = Summation ( Wij) (xj) Where Wij = Softmax (xi.xj)
+
+
+How we do this in tranformer ( the attention head ) 
+
+------------------------------------------------------
+We have 3 matrices - Query , key , value .
+
+Query  : is the current token = Xi 
+Key : are the tokens before Xi which we want to calculate the attention related to xi for 
+value : The actual context vector instead of just the raw value of xj ( j < i ) 
+
+
+Each are a matrix so Wq, Wk, Wv. 
+Each of them gets multiplied by the Xi vector so features of Xi ( or embedding dim) so the initaly dimension of  Wq,Wk,Wv would be (embed_dim , xxx) where xxx is something we will find out . 
+
+For Wq xxx= q (lets say )
+For Wk xxx= k (lets say )
+for Wv xxx= v (lets say )
+
+Now 
+Query = matrix mul (xi,Wq) = (n*d)*(d,q)= n*q
+Key  =  matrix mul (xi,Wk) = (n*d)*(d,k)= n*k
+value = matrix mul (xi,Wv) = (n*d)*(d,v)= n*v
+
+For similarity we find out Q.K , Since it is dot product q = k. Hence 
+Query= n*k
+Key= n*k
+Value = n*v
+
+Similarity of i with j token = Qi * Kj which is dimension = 1 (scalar). 
+
+But this dot product can be very high because dot product value depends on number of dimensions (k) in this case. So we normalize it with 
+Score(Qi.Kj)=dot product/sqrt(k) so 
+
+Now weights contributing to Xi is attention 
+
+Attention = Summation from J=1 to i (Score(Qi.Kj))(Vj).
+
+Of course the attention to self token will be very high but it will not be 1 in most cases .
+
+This is one attention head. 
+
+So attention dimension = ( N,v )  (because score is scalar so it all depends on Value matrix ) 
+
+
+This attention is sum of context vectors of previous tokens. 
+
+
+IMportant question is why use Query , Key and Value matrix and not the original Embedding matrix instead. 
+--------------------------------------------------------------
+EMbedding matrix gets build around lets say english language where vector embeddings represenet closeness of 1 word to another which is a good metric but it will not cover everything. 
+E.g Sentence-  Vatsal studies a lot , Madd does not . Yet he gets high scores in text . 
+
+
+Here madd is the one who gets higher score . With embedding matrices we will not know "He " stands for Madd and not Vatsal .
+With multiple attention heads we have a way to capture this part and other heads can capture other parts .
+
+Other reason is , Embedding matrix is a very huge matrix , ideally we do not want to change it  ( Vocab Size * EMbed dimension ) . we want it to be frozen. So using multiple attention heads is easier ) 
+
+
+So output of 1 attention head = ( N , v) 
+
+lets say we have h attention heads t hen we concatenate all of them to build one context vector 
+We get 
+After multiple attention heads = ( N , h*v)
+
+Here we use a linear projecttion to Convert H*v back to d  with a matrix Wo 
+
+Hence Wo * output from multiheadattention =  ( N , d)   
+
+So now after this we have same output dimension as input dimension which is (N ,d)
+
+ 
